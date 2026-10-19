@@ -40,24 +40,3 @@ exception/                 Domain exceptions + GlobalExceptionHandler (-> RFC 78
 
 Errors (`exception/GlobalExceptionHandler`): 404 `NotFoundException` (unknown flight/booking), 400 `InvalidRequestException` (bad input, not enough seats, wrong booking status, declined payment, ...) and Bean Validation failures, 500 anything unexpected.
 
-## DAO conventions (copied from IBE)
-
-- One interface per table group, `FooDAO`, in the `repository` package, and one implementation `FooDAOJDBC extends AbstractSpringDaoJdbc` in the separate `repository.jdbc` package (IBE's newer modules do the same: `...api.provider.dao` vs `...impl.dao.jdbc`). Services depend only on the interface.
-- `JdbcTemplate` with positional `?` parameters, obtained through `getMainJdbcTemplate()`. No ORM.
-- SQL is inline in the DAO as constants named `<table>_SELECT_FROM`, `<table>_INSERT` (text blocks), snake_case tables and columns, primary key called `id`.
-- Row mapping with a `private static class FooRowMapper implements RowMapper<Foo>` inside the DAO.
-- Method names: `getX` / `getXs`, `insertX` (returns the generated `long` id), `updateX`, `countXs`.
-- A single-row lookup returns `null` when nothing is found (annotated `@Nullable`), never `Optional`. Lists are never null.
-- Parameters are `final`; ids are primitive `long`.
-- Transactions are declared on the service methods, not in the DAOs.
-
-Differences from IBE: Spring `@Repository` instead of CDI `@ApplicationScoped`, Flyway instead of Liquibase, and no `SQLUtil` helpers (plain `rs.getXxx`). IBE also uses plural table names (`credit_requests`) and `created`/`last_modified` audit columns; here the tables are singular.
-
-## Things to look at
-
-- `FlightDAOJDBC.reserveSeats`: one atomic `UPDATE ... WHERE available_seats >= ?` instead of read-then-write.
-- `FlightDAOJDBC.getFlights`: dynamic WHERE clause, sorting and paging.
-- `BookingDAOJDBC.updateBookingStatus`: compare-and-set on the status.
-- `PaymentService.pay`: `noRollbackFor` - why must the declined payment survive the exception?
-
-Search the code for `TODO(intern)` for places meant to be extended.
