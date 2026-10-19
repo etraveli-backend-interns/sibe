@@ -1,0 +1,70 @@
+### Mini-IBE booking flow (IntelliJ HTTP client). Run the requests top to bottom - ids are chained automatically.
+
+@host = http://localhost:8080/etraveli
+
+### 1. Search flights (filter + sort + pagination). Stores the id of the first result.
+GET {{host}}/flights?origin=ATH&destination=LON&passengers=2&sortBy=price&sortDir=asc&page=0&size=5
+
+> {%
+  client.global.set("flightId", response.body.items[0].id);
+%}
+
+### 2. Flight detail
+GET {{host}}/flights/{{flightId}}
+
+### 3. Create a booking for two passengers. Stores the booking reference and total.
+POST {{host}}/bookings
+Content-Type: application/json
+
+{
+  "flightId": {{flightId}},
+  "contactEmail": "alex@example.com",
+  "passengers": [
+    { "firstName": "Alex", "lastName": "Papadopoulos", "dateOfBirth": "1990-04-12", "passportNumber": "AB123456" },
+    { "firstName": "Maria", "lastName": "Papadopoulou", "dateOfBirth": "1992-09-30", "passportNumber": "CD654321" }
+  ]
+}
+
+> {%
+  client.global.set("reference", response.body.reference);
+  client.global.set("totalAmount", response.body.totalAmount);
+  client.global.set("currency", response.body.currency);
+%}
+
+### 4. View the booking (status CREATED)
+GET {{host}}/bookings/{{reference}}
+
+### 5. Pay - declined because the amount is too low (400, booking stays CREATED)
+POST {{host}}/bookings/{{reference}}/payments
+Content-Type: application/json
+
+{ "amount": 1.00, "currency": "{{currency}}", "cardNumber": "4242424242424242" }
+
+### 6. Pay the full amount (booking becomes CONFIRMED)
+POST {{host}}/bookings/{{reference}}/payments
+Content-Type: application/json
+
+{ "amount": {{totalAmount}}, "currency": "{{currency}}", "cardNumber": "4242424242424242" }
+
+### 7. View the booking again (status CONFIRMED, payments listed)
+GET {{host}}/bookings/{{reference}}
+
+### 8. List bookings
+GET {{host}}/bookings?status=CONFIRMED&contactEmail=alex@example.com&page=0&size=10
+
+### 9. Cancel the booking (seats are released)
+DELETE {{host}}/bookings/{{reference}}
+
+### Negative cases
+
+### Not enough seats: flight with 2-3 seats left, asking for more (400). Find one via GET /flights?origin=ATH&destination=STO
+GET {{host}}/flights?origin=ATH&destination=STO&passengers=1
+
+### Invalid sort field (400)
+GET {{host}}/flights?sortBy=price;DROP
+
+### Page size too large (400)
+GET {{host}}/flights?size=1000
+
+### Unknown booking (404)
+GET {{host}}/bookings/ZZZZZZ

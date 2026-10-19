@@ -1,0 +1,705 @@
+{
+  "info": {
+    "name": "Mini-IBE",
+    "description": "Flight booking training service. Run the requests top to bottom: search stores flightId, create booking stores reference/totalAmount/currency, and the later requests reuse them. Start the app first (./gradlew bootRun).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/etraveli"
+    },
+    {
+      "key": "flightId",
+      "value": "1"
+    },
+    {
+      "key": "reference",
+      "value": ""
+    },
+    {
+      "key": "totalAmount",
+      "value": ""
+    },
+    {
+      "key": "currency",
+      "value": "EUR"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Flights",
+      "item": [
+        {
+          "name": "Search flights (sorted by price)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Has at least one flight', () => pm.expect(body.items.length).to.be.above(0));",
+                  "pm.test('Page info is present', () => pm.expect(body).to.have.keys('items', 'page', 'size', 'totalElements', 'totalPages'));",
+                  "// remember the first flight so the booking request can use it",
+                  "pm.collectionVariables.set('flightId', body.items[0].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/flights?origin=ATH&destination=LON&passengers=2&sortBy=price&sortDir=asc&page=0&size=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "flights"
+              ],
+              "query": [
+                {
+                  "key": "origin",
+                  "value": "ATH"
+                },
+                {
+                  "key": "destination",
+                  "value": "LON"
+                },
+                {
+                  "key": "passengers",
+                  "value": "2"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "price"
+                },
+                {
+                  "key": "sortDir",
+                  "value": "asc"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search flights (price range and date, optional filters)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('All prices are within the range', () => body.items.forEach(f => pm.expect(f.price).to.be.within(100, 250)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/flights?origin=ATH&minPrice=100&maxPrice=250&sortBy=price&sortDir=desc&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "flights"
+              ],
+              "query": [
+                {
+                  "key": "origin",
+                  "value": "ATH"
+                },
+                {
+                  "key": "destination",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "departureDate",
+                  "value": "2026-10-19",
+                  "disabled": true
+                },
+                {
+                  "key": "minPrice",
+                  "value": "100"
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "250"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "price"
+                },
+                {
+                  "key": "sortDir",
+                  "value": "desc"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get flight by id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns the requested flight', () => pm.expect(String(pm.response.json().id)).to.eql(String(pm.collectionVariables.get('flightId'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/flights/{{flightId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "flights",
+                "{{flightId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Book",
+      "item": [
+        {
+          "name": "Create booking (2 passengers)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Location header is set', () => pm.response.to.have.header('Location'));",
+                  "const booking = pm.response.json();",
+                  "pm.test('Booking is CREATED', () => pm.expect(booking.status).to.eql('CREATED'));",
+                  "pm.test('Has two passengers', () => pm.expect(booking.passengers.length).to.eql(2));",
+                  "// remember what the payment requests need",
+                  "pm.collectionVariables.set('reference', booking.reference);",
+                  "pm.collectionVariables.set('totalAmount', booking.totalAmount);",
+                  "pm.collectionVariables.set('currency', booking.currency);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"flightId\": {{flightId}},\n  \"contactEmail\": \"alex@example.com\",\n  \"passengers\": [\n    {\n      \"firstName\": \"Alex\",\n      \"lastName\": \"Papadopoulos\",\n      \"dateOfBirth\": \"1990-04-12\",\n      \"passportNumber\": \"AB123456\"\n    },\n    {\n      \"firstName\": \"Maria\",\n      \"lastName\": \"Papadopoulou\",\n      \"dateOfBirth\": \"1992-09-30\",\n      \"passportNumber\": \"CD654321\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get booking (status CREATED)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const booking = pm.response.json();",
+                  "pm.test('Reference matches', () => pm.expect(booking.reference).to.eql(pm.collectionVariables.get('reference')));",
+                  "pm.test('Booking is still CREATED', () => pm.expect(booking.status).to.eql('CREATED'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{reference}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "{{reference}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List bookings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Page info is present', () => pm.expect(pm.response.json()).to.have.keys('items', 'page', 'size', 'totalElements', 'totalPages'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings?contactEmail=alex@example.com&page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "CREATED",
+                  "disabled": true
+                },
+                {
+                  "key": "contactEmail",
+                  "value": "alex@example.com"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Pay",
+      "item": [
+        {
+          "name": "Pay booking (amount too low, declined)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Payment declined', () => pm.expect(pm.response.json().detail).to.include('declined'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1.00,\n  \"currency\": \"{{currency}}\",\n  \"cardNumber\": \"4242424242424242\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{reference}}/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "{{reference}}",
+                "payments"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pay booking (full amount, approved)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Payment is APPROVED', () => pm.expect(pm.response.json().status).to.eql('APPROVED'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": {{totalAmount}},\n  \"currency\": \"{{currency}}\",\n  \"cardNumber\": \"4242424242424242\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{reference}}/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "{{reference}}",
+                "payments"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Review and cancel",
+      "item": [
+        {
+          "name": "Get booking (after payment, status CONFIRMED)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const booking = pm.response.json();",
+                  "pm.test('Booking is CONFIRMED', () => pm.expect(booking.status).to.eql('CONFIRMED'));",
+                  "pm.test('Payments are listed', () => pm.expect(booking.payments.length).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{reference}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "{{reference}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancel booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Booking is CANCELLED', () => pm.expect(pm.response.json().status).to.eql('CANCELLED'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{reference}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "{{reference}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Negative cases (run last)",
+      "item": [
+        {
+          "name": "Pay a cancelled booking (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": {{totalAmount}},\n  \"currency\": \"{{currency}}\",\n  \"cardNumber\": \"4242424242424242\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{reference}}/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "{{reference}}",
+                "payments"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unknown booking (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/ZZZZZZ",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "ZZZZZZ"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unknown flight (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/flights/9999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "flights",
+                "9999"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Page size too large (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Error mentions the size field', () => pm.expect(pm.response.json().errors.join(' ')).to.include('size'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/flights?size=1000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "flights"
+              ],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "1000"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Invalid booking body (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Lists the invalid fields', () => pm.expect(pm.response.json().errors.length).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"flightId\": {{flightId}},\n  \"contactEmail\": \"not-an-email\",\n  \"passengers\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings"
+              ]
+            }
+          }
+        },
+        {
+          "name": "More passengers than seats (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mentions seats', () => pm.expect(pm.response.json().detail).to.include('seat'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"flightId\": 9,\n  \"contactEmail\": \"alex@example.com\",\n  \"passengers\": [\n    {\n      \"firstName\": \"P\",\n      \"lastName\": \"One\",\n      \"dateOfBirth\": \"1990-01-01\",\n      \"passportNumber\": \"PASS0001\"\n    },\n    {\n      \"firstName\": \"P\",\n      \"lastName\": \"Two\",\n      \"dateOfBirth\": \"1990-01-02\",\n      \"passportNumber\": \"PASS0002\"\n    },\n    {\n      \"firstName\": \"P\",\n      \"lastName\": \"Three\",\n      \"dateOfBirth\": \"1990-01-03\",\n      \"passportNumber\": \"PASS0003\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings"
+              ]
+            },
+            "description": "Uses flight id 9 from the fresh seed data (a flight with only 2 seats left) and asks for 3 seats."
+          }
+        }
+      ]
+    }
+  ]
+}
