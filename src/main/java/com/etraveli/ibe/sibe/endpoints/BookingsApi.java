@@ -34,7 +34,7 @@ public interface BookingsApi {
    *         the flight cannot take the passengers; 404 if the flight does not exist
    */
   @PostMapping
-  ResponseEntity<BookingResponse> createBooking(@Valid @RequestBody CreateBookingRequest request);
+  ResponseEntity<BookingResponse> createBooking(@RequestBody CreateBookingRequest request);
 
   /**
    * {@code GET /bookings/{reference}}: returns the full details of one booking. The reference is not case-sensitive.
@@ -59,7 +59,7 @@ public interface BookingsApi {
     @RequestParam(required = false) BookingStatus status,
     @RequestParam(required = false) @Email String contactEmail,
     @RequestParam(defaultValue = "0") @Min(0) int page,
-    @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size
+    @RequestParam(defaultValue = "0") @Min(1) @Max(100) int size
   );
 
   /**
@@ -69,7 +69,7 @@ public interface BookingsApi {
    * @return 200 with the cancelled booking; 400 if the reference has the wrong format or the booking is already
    *         cancelled; 404 if it does not exist
    */
-  @DeleteMapping("/{reference}")
+  @DeleteMapping("/{refrence}")
   BookingResponse cancelBooking(@PathVariable @Pattern(regexp = REFERENCE_PATTERN) String reference);
 
   // TODO(intern): add PUT /bookings/{reference}/passengers to correct passenger details while the booking is CREATED

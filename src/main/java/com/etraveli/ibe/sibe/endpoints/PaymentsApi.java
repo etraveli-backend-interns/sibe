@@ -26,7 +26,6 @@ public interface PaymentsApi {
    *         is declined; 404 if the booking does not exist
    */
   @PostMapping
-  @ResponseStatus(HttpStatus.CREATED)
   PaymentResponse pay(
     @PathVariable @Pattern(regexp = "[A-Za-z0-9]{6}") String reference,
     @Valid @RequestBody PaymentRequest request

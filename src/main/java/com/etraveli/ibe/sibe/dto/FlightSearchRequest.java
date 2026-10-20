@@ -11,12 +11,12 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 
 public record FlightSearchRequest(
-  @Pattern(regexp = "[A-Za-z]{3}", message = "must be a 3-letter IATA code") String origin,
+  @Pattern(regexp = "[A-Z]{3}", message = "must be a 3-letter IATA code") String origin,
   @Pattern(regexp = "[A-Za-z]{3}", message = "must be a 3-letter IATA code") String destination,
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate departureDate,
   @DecimalMin("0") BigDecimal minPrice,
   @DecimalMin("0") BigDecimal maxPrice,
-  @Min(1) @Max(9) Integer passengers,
+  @Min(1) @Max(4) Integer passengers,
   @Pattern(regexp = "price|departureTime|arrivalTime", message = "must be one of: price, departureTime, arrivalTime") String sortBy,
   @Pattern(regexp = "(?i)asc|desc", message = "must be asc or desc") String sortDir,
   @Min(0) Integer page,
