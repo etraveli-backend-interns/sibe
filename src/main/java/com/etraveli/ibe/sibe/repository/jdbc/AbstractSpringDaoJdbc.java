@@ -9,7 +9,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 
-/** Scaled-down version of IBE's AbstractSpringDaoJdbc: gives DAOs their JdbcTemplate and common helpers. */
 public abstract class AbstractSpringDaoJdbc {
 
   private final JdbcTemplate mainJdbcTemplate;
