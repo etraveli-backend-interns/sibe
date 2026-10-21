@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Mini-IBE",
-    "description": "Flight booking training service. Run the requests top to bottom: search stores flightId, create booking stores reference/totalAmount/currency, and the later requests reuse them. Start the app first (./gradlew bootRun).",
+    "description": "Flight booking training service. There are no scripts: send each request yourself and copy values from one response into the next request by hand (flightId into the booking body, reference into the payment URL, totalAmount and currency into the payment body). The collection variables baseUrl, flightId, reference, totalAmount and currency can be edited in the collection's Variables tab. Start the app first (./gradlew bootRun).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -32,22 +32,6 @@
       "item": [
         {
           "name": "Search flights (sorted by price)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
-                  "const body = pm.response.json();",
-                  "pm.test('Has at least one flight', () => pm.expect(body.items.length).to.be.above(0));",
-                  "pm.test('Page info is present', () => pm.expect(body).to.have.keys('items', 'page', 'size', 'totalElements', 'totalPages'));",
-                  "// remember the first flight so the booking request can use it",
-                  "pm.collectionVariables.set('flightId', body.items[0].id);"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
@@ -94,19 +78,6 @@
         },
         {
           "name": "Search flights (price range and date, optional filters)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
-                  "const body = pm.response.json();",
-                  "pm.test('All prices are within the range', () => body.items.forEach(f => pm.expect(f.price).to.be.within(100, 250)));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
@@ -159,18 +130,6 @@
         },
         {
           "name": "Get flight by id",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Returns the requested flight', () => pm.expect(String(pm.response.json().id)).to.eql(String(pm.collectionVariables.get('flightId'))));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
@@ -193,25 +152,6 @@
       "item": [
         {
           "name": "Create booking (2 passengers)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
-                  "pm.test('Location header is set', () => pm.response.to.have.header('Location'));",
-                  "const booking = pm.response.json();",
-                  "pm.test('Booking is CREATED', () => pm.expect(booking.status).to.eql('CREATED'));",
-                  "pm.test('Has two passengers', () => pm.expect(booking.passengers.length).to.eql(2));",
-                  "// remember what the payment requests need",
-                  "pm.collectionVariables.set('reference', booking.reference);",
-                  "pm.collectionVariables.set('totalAmount', booking.totalAmount);",
-                  "pm.collectionVariables.set('currency', booking.currency);"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -242,20 +182,6 @@
         },
         {
           "name": "Get booking (status CREATED)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
-                  "const booking = pm.response.json();",
-                  "pm.test('Reference matches', () => pm.expect(booking.reference).to.eql(pm.collectionVariables.get('reference')));",
-                  "pm.test('Booking is still CREATED', () => pm.expect(booking.status).to.eql('CREATED'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
@@ -273,18 +199,6 @@
         },
         {
           "name": "List bookings",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Page info is present', () => pm.expect(pm.response.json()).to.have.keys('items', 'page', 'size', 'totalElements', 'totalPages'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
@@ -325,18 +239,6 @@
       "item": [
         {
           "name": "Pay booking (amount too low, declined)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
-                  "pm.test('Payment declined', () => pm.expect(pm.response.json().detail).to.include('declined'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -369,18 +271,6 @@
         },
         {
           "name": "Pay booking (full amount, approved)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
-                  "pm.test('Payment is APPROVED', () => pm.expect(pm.response.json().status).to.eql('APPROVED'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -418,20 +308,6 @@
       "item": [
         {
           "name": "Get booking (after payment, status CONFIRMED)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
-                  "const booking = pm.response.json();",
-                  "pm.test('Booking is CONFIRMED', () => pm.expect(booking.status).to.eql('CONFIRMED'));",
-                  "pm.test('Payments are listed', () => pm.expect(booking.payments.length).to.be.above(0));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
@@ -449,18 +325,6 @@
         },
         {
           "name": "Cancel booking",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Booking is CANCELLED', () => pm.expect(pm.response.json().status).to.eql('CANCELLED'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "DELETE",
             "header": [],
@@ -483,17 +347,6 @@
       "item": [
         {
           "name": "Pay a cancelled booking (400)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status is 400', () => pm.response.to.have.status(400));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -526,17 +379,6 @@
         },
         {
           "name": "Unknown booking (404)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status is 404', () => pm.response.to.have.status(404));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
@@ -554,17 +396,6 @@
         },
         {
           "name": "Unknown flight (404)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status is 404', () => pm.response.to.have.status(404));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
@@ -582,18 +413,6 @@
         },
         {
           "name": "Page size too large (400)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
-                  "pm.test('Error mentions the size field', () => pm.expect(pm.response.json().errors.join(' ')).to.include('size'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
@@ -616,18 +435,6 @@
         },
         {
           "name": "Invalid booking body (400)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
-                  "pm.test('Lists the invalid fields', () => pm.expect(pm.response.json().errors.length).to.be.above(0));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -658,18 +465,6 @@
         },
         {
           "name": "More passengers than seats (400)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
-                  "pm.test('Mentions seats', () => pm.expect(pm.response.json().detail).to.include('seat'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
