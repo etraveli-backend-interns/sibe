@@ -3,10 +3,26 @@
 A deliberately small stand-in for the IBE monolith, used in the backend part of the intern training.
 Spring Boot + plain JDBC (`NamedParameterJdbcTemplate`, no JPA) + MySQL. Domain: air ticket booking.
 
+## Setup
+
+Install once:
+
+- **JDK 21** (e.g. Temurin). Check with `java -version`. Gradle uses the Java 21 toolchain from `build.gradle`.
+- **Docker Desktop** (or any Docker engine with the `docker compose` plugin). Make sure it is running.
+- **IntelliJ IDEA** (Community is enough for the Java side; the `.http` client needs Ultimate, otherwise use the Postman collection).
+
+Then:
+
+1. Start MySQL from the project root: `docker compose up -d`. It listens on `localhost:3307` with database `sibe`,
+   user `root`, password `pwd1` (matching `src/main/resources/application.properties`). Stop it with `docker compose down`.
+2. Open the project in IntelliJ: *File > Open* and pick the project folder (`build.gradle`); let Gradle import finish.
+   Set *Project Structure > SDK* and *Settings > Build Tools > Gradle > Gradle JVM* to JDK 21.
+3. Run `SibeApplication` from IntelliJ, or `./gradlew bootRun` from a terminal.
+4. Try the API with `requests/booking-flow.http` (IntelliJ) or the Postman collection in `requests/`.
+
 ## Run it
 
-1. MySQL (Docker) must be listening on `localhost:3307` with database `sibe`, user `root`, password `pwd1`
-   (see `src/main/resources/application.properties`).
+1. MySQL must be up (see Setup above): `localhost:3307`, database `sibe`, user `root`, password `pwd1`.
 2. `./gradlew bootRun` - Flyway creates the tables and seeds the flights on first start
    (`src/main/resources/db/migration`). To start over run `DROP DATABASE sibe; CREATE DATABASE sibe;`.
 3. The API is served at `http://localhost:8080/etraveli`.
