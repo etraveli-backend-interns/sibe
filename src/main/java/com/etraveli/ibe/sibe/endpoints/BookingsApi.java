@@ -51,7 +51,6 @@ public interface BookingsApi {
    * @param status       optional, only bookings in this status
    * @param contactEmail optional, only bookings made with this email
    * @param page         zero-based page number, defaults to 0
-   * @param size         bookings per page, 1 to 100, defaults to 10
    * @return 200 with one page of booking summaries; 400 if a parameter is invalid
    */
   @GetMapping
