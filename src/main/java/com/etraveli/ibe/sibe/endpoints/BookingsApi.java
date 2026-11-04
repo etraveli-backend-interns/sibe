@@ -69,7 +69,7 @@ public interface BookingsApi {
    * @return 200 with the cancelled booking; 400 if the reference has the wrong format or the booking is already
    *         cancelled; 404 if it does not exist
    */
-  @DeleteMapping("/{refrence}")
+  @DeleteMapping("/{reference}")
   BookingResponse cancelBooking(@PathVariable @Pattern(regexp = REFERENCE_PATTERN) String reference);
 
   // TODO(intern): add PUT /bookings/{reference}/passengers to correct passenger details while the booking is CREATED
