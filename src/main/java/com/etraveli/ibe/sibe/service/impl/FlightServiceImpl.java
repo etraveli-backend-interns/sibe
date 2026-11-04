@@ -41,7 +41,7 @@ public class FlightServiceImpl implements FlightService {
       request.sortBy(),
       request.sortDir(),
       request.page() * request.size(),
-      request.size()
+      request.size().byteValue()
     );
 
     List<FlightResponse> items = flightDAO.getFlights(criteria).stream().map(FlightResponse::from).toList();

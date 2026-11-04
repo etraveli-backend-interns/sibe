@@ -15,7 +15,6 @@ public interface BookingService {
    * One seat per passenger is reserved on the flight and the total amount is the flight price times the number of
    * passengers. Seat reservation and booking creation succeed or fail together.
    *
-   * @param request the flight, the contact email and the passengers
    * @return the new booking, including its generated reference
    * @throws NotFoundException       if the flight does not exist
    * @throws InvalidRequestException if the flight has already departed or has too few free seats
