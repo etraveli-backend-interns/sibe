@@ -41,7 +41,6 @@ public class FlightServiceImpl implements FlightService {
       request.sortBy(),
       request.sortDir(),
       request.page() * request.size(),
-      request.size(),
       request.size()
     );
 
