@@ -1,8 +1,10 @@
 package com.etraveli.ibe.sibe.service;
 
+import com.etraveli.ibe.sibe.dto.FlightPairResponse;
 import com.etraveli.ibe.sibe.dto.FlightResponse;
 import com.etraveli.ibe.sibe.dto.FlightSearchRequest;
 import com.etraveli.ibe.sibe.dto.PageResponse;
+import com.etraveli.ibe.sibe.dto.RoundTripSearchRequest;
 import com.etraveli.ibe.sibe.exception.InvalidRequestException;
 import com.etraveli.ibe.sibe.exception.NotFoundException;
 
@@ -27,4 +29,15 @@ public interface FlightService {
    * @throws NotFoundException if there is no flight with this id
    */
   FlightResponse getFlight(Long id);
+
+  /**
+   * Searches for round-trip options: pairs of outbound and return flights between the same two airports,
+   * on the requested dates, with enough seats for the requested number of passengers.
+   * The results are sorted by total price (or outbound/return price) and paginated.
+   *
+   * @param request the round-trip search parameters
+   * @return a page of flight pairs, each with the combined price
+   * @throws InvalidRequestException if the return date is before the outbound date, or origin equals destination
+   */
+  PageResponse<FlightPairResponse> searchRoundTrip(RoundTripSearchRequest request);
 }

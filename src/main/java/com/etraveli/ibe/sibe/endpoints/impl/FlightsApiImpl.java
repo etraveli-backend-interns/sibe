@@ -2,9 +2,11 @@ package com.etraveli.ibe.sibe.endpoints.impl;
 
 import org.springframework.web.bind.annotation.RestController;
 
+import com.etraveli.ibe.sibe.dto.FlightPairResponse;
 import com.etraveli.ibe.sibe.dto.FlightResponse;
 import com.etraveli.ibe.sibe.dto.FlightSearchRequest;
 import com.etraveli.ibe.sibe.dto.PageResponse;
+import com.etraveli.ibe.sibe.dto.RoundTripSearchRequest;
 import com.etraveli.ibe.sibe.endpoints.FlightsApi;
 import com.etraveli.ibe.sibe.service.FlightService;
 
@@ -25,5 +27,10 @@ public class FlightsApiImpl implements FlightsApi {
   @Override
   public FlightResponse getFlight(Long id) {
     return flightService.getFlight(id);
+  }
+
+  @Override
+  public PageResponse<FlightPairResponse> searchRoundTrip(RoundTripSearchRequest request) {
+    return flightService.searchRoundTrip(request);
   }
 }

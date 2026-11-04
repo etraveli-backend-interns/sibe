@@ -4,9 +4,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.etraveli.ibe.sibe.dto.FlightPairResponse;
 import com.etraveli.ibe.sibe.dto.FlightResponse;
 import com.etraveli.ibe.sibe.dto.FlightSearchRequest;
 import com.etraveli.ibe.sibe.dto.PageResponse;
+import com.etraveli.ibe.sibe.dto.RoundTripSearchRequest;
 
 import jakarta.validation.Valid;
 
@@ -31,6 +33,16 @@ public interface FlightsApi {
    */
   @GetMapping("/{id}")
   FlightResponse getFlight(@PathVariable Long id);
+
+  /**
+   * {@code GET /flights/round-trip}: searches for round-trip options.
+   * Returns pairs of outbound and return flights between two airports, with the combined price.
+   *
+   * @param request the round-trip search query parameters, validated before the method runs
+   * @return 200 with one page of flight pairs; 400 if a parameter is invalid
+   */
+  @GetMapping("/round-trip")
+  PageResponse<FlightPairResponse> searchRoundTrip(@Valid RoundTripSearchRequest request);
 
   // TODO(intern): flight admin - POST /flights, PUT /flights/{id}, DELETE /flights/{id} (refuse deleting flights that have bookings)
 }
