@@ -31,14 +31,13 @@ public class FlightDAOJDBC extends AbstractSpringDaoJdbc implements FlightDAO {
 
   @Override
   public List<Flight> getFlights(final FlightSearchCriteria criteria) {
-    final String sortDirection = "desc".equalsIgnoreCase(criteria.sortDir()) ? "DESC" : "ASC";
 
     final List<Object> args = new ArrayList<>();
     final String where = buildWhereClause(criteria, args);
     args.add(criteria.limit());
     args.add(criteria.offset());
 
-    final String sql = flight_SELECT_FROM + where + " ORDER BY " + criteria.sortBy() + " " + sortDirection + ", id LIMIT ? OFFSET ?";
+    final String sql = flight_SELECT_FROM + where + " LIMIT ? OFFSET ?"; //removed sorting
     return getMainJdbcTemplate().query(sql, new FlightRowMapper(), args.toArray());
   }
 
