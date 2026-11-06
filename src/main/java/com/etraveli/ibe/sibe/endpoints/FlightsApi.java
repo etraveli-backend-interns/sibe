@@ -33,4 +33,6 @@ public interface FlightsApi {
   FlightResponse getFlight(@PathVariable Long id);
 
   // TODO(intern): flight admin - POST /flights, PUT /flights/{id}, DELETE /flights/{id} (refuse deleting flights that have bookings)
+
+
 }
