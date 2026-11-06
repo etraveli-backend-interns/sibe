@@ -2,9 +2,12 @@ package com.etraveli.ibe.sibe.service;
 
 import com.etraveli.ibe.sibe.dto.FlightResponse;
 import com.etraveli.ibe.sibe.dto.FlightSearchRequest;
-import com.etraveli.ibe.sibe.dto.PageResponse;
+import com.etraveli.ibe.sibe.entities.Flight;
+import com.etraveli.ibe.sibe.entities.SearchFlightsResponse;
 import com.etraveli.ibe.sibe.exception.InvalidRequestException;
 import com.etraveli.ibe.sibe.exception.NotFoundException;
+
+import java.util.List;
 
 public interface FlightService {
 
@@ -17,7 +20,7 @@ public interface FlightService {
    * @return the requested page of flights, with the total number of matches and pages
    * @throws InvalidRequestException if the minimum price is greater than the maximum price
    */
-  PageResponse<FlightResponse> search(FlightSearchRequest request);
+  SearchFlightsResponse search(FlightSearchRequest request);
 
   /**
    * Returns the flight with the given id.
